@@ -190,39 +190,60 @@ curl http://localhost:5000/model-info
 
 ---
 
-## Full Setup From Scratch
-
-```bash
-# 1. Clone repo
-git clone https://github.com/SaiTejaReddyYeldandi/optum-churn-api.git
-cd optum-churn-api
-
-# 2. Install dependencies
-pip install -r requirements.txt
-
-# 3. Train model (Churn_Modelling.csv is already in the repo)
-python train_model.py
-
-# 4. Start API
-python app.py
-# API running at http://localhost:5000
-
-# 5. Run tests (stop Flask first)
-python -m pytest test_app.py -v
-```
-
 ---
 
 ## CI/CD — GitHub Actions
 
-### How to view CI/CD runs
+### How to check if CI/CD is working after a git push
 
-Every push to the `master` branch automatically triggers the CI/CD pipeline. To view it:
+Every time you run `git push`, GitHub Actions automatically triggers. Here is exactly how to verify it worked:
 
-1. Go to [github.com/SaiTejaReddyYeldandi/optum-churn-api](https://github.com/SaiTejaReddyYeldandi/optum-churn-api)
-2. Click the **Actions** tab at the top
-3. You will see a list of all workflow runs — green tick = passed, red cross = failed
-4. Click any run to see the full logs: install → train → test
+**Step 1 — Push your code**
+```bash
+git add .
+git commit -m "your message here"
+git push
+```
+
+**Step 2 — Go to GitHub Actions tab**
+1. Open [github.com/SaiTejaReddyYeldandi/optum-churn-api](https://github.com/SaiTejaReddyYeldandi/optum-churn-api)
+2. Click the **Actions** tab at the top of the repo
+3. You will see your latest workflow run appear within seconds of pushing
+
+**Step 3 — Read the status**
+
+| What you see | What it means |
+|---|---|
+| 🟡 Yellow spinner | Workflow is still running (wait ~35 seconds) |
+| ✅ Green tick | All steps passed — model trained, all 5 tests passed |
+| ❌ Red cross | Something failed — click to see which step broke |
+
+**Step 4 — Click into the run to see full logs**
+1. Click the workflow run name (e.g. "Fix: correct yaml syntax error #2")
+2. Click the **test** job on the left
+3. You will see each step expand: Set up Python → Install dependencies → Train model → Run tests
+4. Scroll to **Run tests** to see the pytest output:
+```
+test_app.py::test_health_endpoint         PASSED [ 20%]
+test_app.py::test_predict_valid_input     PASSED [ 40%]
+test_app.py::test_predict_missing_fields  PASSED [ 60%]
+test_app.py::test_predict_high_risk       PASSED [ 80%]
+test_app.py::test_model_info              PASSED [100%]
+5 passed in ~35s
+```
+
+---
+
+### How to manually re-run CI/CD (without making a code change)
+
+If you want to trigger CI again without pushing new code:
+
+1. Go to the **Actions** tab on GitHub
+2. Click the latest workflow run
+3. Click the **"Re-run all jobs"** button in the top right corner
+4. GitHub will spin up a fresh Ubuntu server and run everything again from scratch
+
+---
 
 ### What the workflow does on every push to `master`
 
@@ -235,6 +256,61 @@ Every push to the `master` branch automatically triggers the CI/CD pipeline. To 
 ### Why train in CI?
 
 Model `.pkl` files are excluded from git (binary, large, regenerated every run). The workflow retrains the model from `train_model.py` so tests always validate the current training code, not a stale cached model.
+
+---
+
+### How to re-run the full project locally from scratch
+
+If you clone this repo on a new machine or want to reset everything locally:
+
+**Step 1 — Clone the repo**
+```bash
+git clone https://github.com/SaiTejaReddyYeldandi/optum-churn-api.git
+cd optum-churn-api
+```
+
+**Step 2 — Install all dependencies**
+```bash
+pip install -r requirements.txt
+```
+
+**Step 3 — Train the model**
+```bash
+python train_model.py
+```
+This will generate `model.pkl`, `scaler.pkl`, `metrics.json`, `feature_names.json` in your folder.
+
+Expected output:
+```
+INFO - Loaded 10000 rows, 14 columns
+INFO - After SMOTE: 12740 training rows
+INFO - AUC: 0.8615
+INFO - F1 Score: 0.6240
+INFO - Training complete!
+```
+
+**Step 4 — Start the Flask API**
+```bash
+python app.py
+```
+API will be live at `http://127.0.0.1:5000`
+
+**Step 5 — Test the API manually**
+```bash
+# Health check
+curl http://127.0.0.1:5000/health
+
+# Churn prediction
+curl -X POST http://127.0.0.1:5000/predict \
+  -H "Content-Type: application/json" \
+  -d '{"CreditScore":600,"Gender":"Female","Age":42,"Tenure":3,"Balance":60000,"NumOfProducts":2,"HasCrCard":1,"IsActiveMember":0,"EstimatedSalary":50000,"Geography":"France"}'
+```
+
+**Step 6 — Run automated tests** (stop Flask first with Ctrl+C)
+```bash
+python -m pytest test_app.py -v
+```
+Expected: `5 passed`
 
 **Workflow file: `.github/workflows/churn-api.yml`**
 
