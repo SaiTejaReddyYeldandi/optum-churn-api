@@ -1,11 +1,10 @@
-- name: Install dependencies
-  run: pip install -r requirements.txt
+name: Churn API CI
 
 on:
   push:
     branches: [ master ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 
 jobs:
   test:
@@ -19,8 +18,7 @@ jobs:
         python-version: '3.11'
 
     - name: Install dependencies
-      run: |
-        pip install flask scikit-learn xgboost pandas numpy imbalanced-learn pytest
+      run: pip install -r requirements.txt
 
     - name: Train model
       run: python train_model.py
