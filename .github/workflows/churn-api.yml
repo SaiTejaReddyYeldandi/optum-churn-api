@@ -1,8 +1,9 @@
-name: Churn API CI
+- name: Install dependencies
+  run: pip install -r requirements.txt
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   pull_request:
     branches: [ main ]
 
