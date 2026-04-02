@@ -16,7 +16,7 @@ Built as part of a 30-day interview prep bootcamp targeting the **Optum Data Ana
 
 A production-ready churn prediction system that:
 
-1. **Trains** an XGBoost classification model on 10,000 bank customer records
+1. **Trains** an XGBoost classification model on 10,000 bank customer records.
 2. **Handles class imbalance** using SMOTE oversampling
 3. **Serves predictions** via a Flask REST API
 4. **Validates inputs** and returns structured JSON responses
